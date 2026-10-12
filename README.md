@@ -1,5 +1,13 @@
 # python.org
 
+> [!IMPORTANT]
+> This is a fork of [python/pythondotorg](https://github.com/python/pythondotorg), kept by [ELIM](https://elim.io) as a
+> public sample of an [Exodus](https://exodus.elim.io) report: https://app.exodus.elim.io/r/s8X2NwZ4RM. A coding agent
+> audited it with the `exodus` command line, answered the report's questions from the code, and made the first three
+> tasks of its plan in the commits after `0758d99`: a Cloud Run image with `/healthz`, Cloud Tasks and Cloud Scheduler
+> in place of the Celery worker and beat, and files in a Cloud Storage bucket. The fork is not deployed, and it is not
+> affiliated with the Python Software Foundation; python.org does not run from it.
+
 [![CI](https://github.com/python/pythondotorg/actions/workflows/ci.yml/badge.svg)](https://github.com/python/pythondotorg/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/pythondotorg/badge/?version=latest)](https://pythondotorg.readthedocs.io/?badge=latest)
 
