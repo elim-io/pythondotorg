@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+# Entry point of the Cloud Run image: nginx on $PORT in front of gunicorn on a socket.
+# nginx keeps the legacy redirects and static aliases of config/nginx.conf.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+export NGINX_CONF=/tmp/nginx.conf
+bin/render-nginx-conf > "$NGINX_CONF"
+cp config/mime.types /tmp/mime.types
+exec bin/start-nginx gunicorn -c gunicorn.cloudrun.conf.py pydotorg.wsgi

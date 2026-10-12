@@ -1,0 +1,7 @@
+.git
+.venv
+.state
+.exodus
+node_modules
+static-root
+**/__pycache__

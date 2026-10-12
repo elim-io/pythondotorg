@@ -1,6 +1,41 @@
-"""Middleware for cache control and surrogate keys."""
+"""Middleware for health checks, cache control and surrogate keys."""
+
+import contextlib
 
 from django.conf import settings
+from django.db import DatabaseError, connection
+from django.http import HttpResponse
+
+HEALTHZ_PATH = "/healthz"
+
+
+class HealthCheck:
+    """Answer GET /healthz with 200 once PostgreSQL answers, 503 when it does not.
+
+    Cloud Run's startup and liveness probes call it from inside Google's network with
+    a Host header that is not in ALLOWED_HOSTS, so it must run before any middleware
+    that validates the host or redirects to HTTPS.
+    """
+
+    def __init__(self, get_response):
+        """Store the get_response callable."""
+        self.get_response = get_response
+
+    def __call__(self, request):
+        """Check the database for /healthz; pass every other request on."""
+        if request.path != HEALTHZ_PATH:
+            return self.get_response(request)
+        try:
+            with connection.cursor() as cursor:
+                cursor.execute("SELECT 1")
+        except DatabaseError:
+            # Drop the broken connection so the next probe opens a fresh one.
+            with contextlib.suppress(DatabaseError):
+                connection.close()
+            return HttpResponse("database unavailable", status=503, content_type="text/plain")
+        response = HttpResponse("ok", content_type="text/plain")
+        response["Cache-Control"] = "no-store"
+        return response
 
 
 class AdminNoCaching:

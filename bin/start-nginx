@@ -56,7 +56,7 @@ fi
   echo 'buildpack=nginx at=nginx-start'
   rm -f /var/run/cabotage/cabotage.sock
   cd /tmp
-  /usr/bin/nginx -p . -c /code/config/nginx.conf
+  /usr/bin/nginx -p . -c "${NGINX_CONF:-/code/config/nginx.conf}"
   echo 'nginx' >$psmgr
 ) &
 

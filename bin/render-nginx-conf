@@ -1,0 +1,15 @@
+#!/usr/bin/env bash
+# Print config/nginx.conf for Cloud Run: listen on $PORT (default 8080) instead of
+# Cabotage's socket, and proxy to gunicorn's socket from gunicorn.cloudrun.conf.py.
+set -euo pipefail
+
+cd "$(dirname "$0")/.."
+port="${PORT:-8080}"
+if ! [[ "$port" =~ ^[0-9]+$ ]]; then
+  echo "PORT must be a number, got: $port" >&2
+  exit 1
+fi
+sed \
+  -e "s#listen unix:/var/run/cabotage/cabotage.sock;#listen ${port};#" \
+  -e "s#server unix:/var/run/cabotage/nginx.sock#server unix:/tmp/gunicorn.sock#" \
+  config/nginx.conf
