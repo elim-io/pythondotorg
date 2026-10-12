@@ -20,7 +20,7 @@ class MediaStorage(S3Boto3Storage):
     location = settings.MEDIAFILES_LOCATION
 
 
-class PipelineManifestStorage(PipelineMixin, ManifestFilesMixin, StaticFilesStorage):
+class CommentAwareManifestMixin:
     """Apply patches to ignore imports in comments.
 
     From https://github.com/django/django/pull/11241.
@@ -192,3 +192,7 @@ class PipelineManifestStorage(PipelineMixin, ManifestFilesMixin, StaticFilesStor
                 hashed_files[hash_key] = hashed_name
 
                 yield name, hashed_name, processed, substitutions
+
+
+class PipelineManifestStorage(CommentAwareManifestMixin, PipelineMixin, ManifestFilesMixin, StaticFilesStorage):
+    """Manifest static files storage on the local disk, as collected into STATIC_ROOT."""

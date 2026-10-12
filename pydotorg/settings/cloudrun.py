@@ -41,13 +41,42 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", cast=Csv())
 
 MIDDLEWARE = ["whitenoise.middleware.WhiteNoiseMiddleware", *MIDDLEWARE]
 
+## Media and static files in a Cloud Storage bucket
+# The bucket uses uniform bucket-level access and is readable by allUsers, so objects get
+# no ACL and URLs are not signed. The service account writes with its own credentials.
+
+GS_BUCKET_NAME = config("GS_BUCKET_NAME")
+GS_PROJECT_ID = GOOGLE_CLOUD_PROJECT or None
+GS_DEFAULT_ACL = None
+GS_QUERYSTRING_AUTH = False
+# A CDN in front of the bucket, such as Fastly, when there is one; bin/render-nginx-conf
+# reads the same variables to redirect the legacy static paths.
+GS_CUSTOM_ENDPOINT = config("GS_CUSTOM_ENDPOINT", default="").rstrip("/") or None
+GS_PUBLIC_BASE_URL = GS_CUSTOM_ENDPOINT or f"https://storage.googleapis.com/{GS_BUCKET_NAME}"
+
 MEDIAFILES_LOCATION = "media"
+MEDIA_URL = f"{GS_PUBLIC_BASE_URL}/{MEDIAFILES_LOCATION}/"
+STATIC_URL = config("STATIC_URL", default=f"{GS_PUBLIC_BASE_URL}/static/")
+# Where pydotorg.views.MediaMigrationView sends the legacy /m/ URLs.
+MEDIA_MIGRATION_BASE_URL = GS_PUBLIC_BASE_URL
+
 STORAGES = {
     "default": {
-        "BACKEND": "custom_storages.storages.MediaStorage",
+        "BACKEND": "storages.backends.gcloud.GoogleCloudStorage",
+        "OPTIONS": {
+            "location": MEDIAFILES_LOCATION,
+            "file_overwrite": False,
+            "object_parameters": {"cache_control": "public, max-age=86400"},
+        },
     },
+    # Written by `manage.py collectstatic` at deploy time, before the new revision takes
+    # traffic; the image has no static files of its own.
     "staticfiles": {
-        "BACKEND": "custom_storages.storages.PipelineManifestStorage",
+        "BACKEND": "custom_storages.gcloud.GoogleCloudPipelineManifestStorage",
+        "OPTIONS": {
+            "location": "static",
+            "object_parameters": {"cache_control": "public, max-age=604800"},
+        },
     },
 }
 
@@ -79,17 +108,3 @@ sentry_sdk.init(
     traces_sample_rate=0.1,
     profiles_sample_rate=0.1,
 )
-
-AWS_ACCESS_KEY_ID = config("AWS_ACCESS_KEY_ID")
-AWS_SECRET_ACCESS_KEY = config("AWS_SECRET_ACCESS_KEY")
-AWS_STORAGE_BUCKET_NAME = config("AWS_STORAGE_BUCKET_NAME")
-AWS_DEFAULT_ACL = config("AWS_DEFAULT_ACL", default="public-read")
-AWS_AUTO_CREATE_BUCKET = False
-AWS_S3_OBJECT_PARAMETERS = {
-    "CacheControl": "max-age=86400",
-}
-AWS_QUERYSTRING_AUTH = False
-AWS_S3_FILE_OVERWRITE = False
-AWS_S3_REGION_NAME = config("AWS_S3_REGION_NAME", default="us-east-1")
-AWS_S3_USE_SSL = True
-AWS_S3_ENDPOINT_URL = config("AWS_S3_ENDPOINT_URL", default="https://s3.amazonaws.com")

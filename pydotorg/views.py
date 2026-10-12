@@ -76,14 +76,14 @@ class DocumentationIndexView(TemplateView):
 
 
 class MediaMigrationView(RedirectView):
-    """Redirect legacy media URLs to the S3 storage bucket."""
+    """Redirect legacy media URLs to the media bucket (S3, or Cloud Storage on Cloud Run)."""
 
     prefix = None
     permanent = True
     query_string = False
 
     def get_redirect_url(self, *args, **kwargs):
-        """Build the S3 redirect URL from the media path."""
+        """Build the bucket redirect URL from the media path."""
         # Normalize path to prevent traversal (../, ....//,  %2e%2e/, etc.)
         image_path = PurePosixPath(kwargs["url"]).as_posix().lstrip("/")
         # Collapse any remaining parent references after normalization
@@ -91,7 +91,10 @@ class MediaMigrationView(RedirectView):
         image_path = "/".join(parts)
         if self.prefix:
             image_path = f"{self.prefix}/{image_path}"
-        return f"{settings.AWS_S3_ENDPOINT_URL}/{settings.AWS_STORAGE_BUCKET_NAME}/{image_path}"
+        base_url = getattr(settings, "MEDIA_MIGRATION_BASE_URL", None)
+        if not base_url:
+            base_url = f"{settings.AWS_S3_ENDPOINT_URL}/{settings.AWS_STORAGE_BUCKET_NAME}"
+        return f"{base_url}/{image_path}"
 
 
 class DocsByVersionView(TemplateView):

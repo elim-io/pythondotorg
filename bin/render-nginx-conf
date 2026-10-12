@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Print config/nginx.conf for Cloud Run: listen on $PORT (default 8080) instead of
 # Cabotage's socket, and proxy to gunicorn's socket from gunicorn.cloudrun.conf.py.
+# Static files live in the Cloud Storage bucket, not in the image, so the static
+# aliases become redirects to STATIC_URL, worked out as pydotorg.settings.cloudrun does.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
@@ -9,7 +11,27 @@ if ! [[ "$port" =~ ^[0-9]+$ ]]; then
   echo "PORT must be a number, got: $port" >&2
   exit 1
 fi
+
+static_url="${STATIC_URL:-}"
+if [[ -z "$static_url" && -n "${GS_BUCKET_NAME:-}" ]]; then
+  endpoint="${GS_CUSTOM_ENDPOINT:-https://storage.googleapis.com/$GS_BUCKET_NAME}"
+  static_url="${endpoint%/}/static/"
+fi
+static_rules=()
+if [[ -n "$static_url" ]]; then
+  if ! [[ "$static_url" =~ ^https://[A-Za-z0-9._~:/%-]+/$ ]]; then
+    echo "STATIC_URL must be an https:// URL ending in /, got: $static_url" >&2
+    exit 1
+  fi
+  static_rules=(
+    -e "s#alias /code/static-root/;#rewrite ^/static/(.*)\$ ${static_url}\$1 permanent;#"
+    -e "s#alias /code/static-root/images/;#rewrite ^/images/(.*)\$ ${static_url}images/\$1 permanent;#"
+    -e "s#alias /code/static-root/favicon.ico;#return 301 ${static_url}favicon.ico;#"
+  )
+fi
+
 sed \
   -e "s#listen unix:/var/run/cabotage/cabotage.sock;#listen ${port};#" \
   -e "s#server unix:/var/run/cabotage/nginx.sock#server unix:/tmp/gunicorn.sock#" \
+  "${static_rules[@]}" \
   config/nginx.conf

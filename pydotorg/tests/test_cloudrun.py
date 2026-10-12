@@ -96,9 +96,7 @@ CLOUD_RUN_ENV = {
     "DEFAULT_FROM_EMAIL": "noreply@python.org",
     "FASTLY_API_KEY": "test",
     "SENTRY_DSN": "",
-    "AWS_ACCESS_KEY_ID": "test",
-    "AWS_SECRET_ACCESS_KEY": "test",
-    "AWS_STORAGE_BUCKET_NAME": "test",
+    "GS_BUCKET_NAME": "pdo-files",
 }
 
 
