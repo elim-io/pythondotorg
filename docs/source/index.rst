@@ -5,7 +5,7 @@ python.org
    :target: https://github.com/python/pythondotorg/actions/workflows/ci.yml
 
 The codebase behind `python.org <https://www.python.org>`_. It's a Django 5.2
-application backed by PostgreSQL, Redis, and Celery, with Elasticsearch
+application backed by PostgreSQL, with Elasticsearch
 powering site search via Haystack.
 
 Quick start
@@ -21,7 +21,7 @@ full setup instructions.
 Make targets
 ------------
 
-:``serve``: Start the full stack (Postgres, Redis, web, worker, static).
+:``serve``: Start the full stack (Postgres, web, Mailpit).
 :``test``: Run the test suite.
 :``migrations``: Generate migrations from model changes.
 :``migrate``: Apply pending migrations.
@@ -53,13 +53,14 @@ Apps at a glance
 Docker services
 ---------------
 
-The ``docker-compose.yml`` defines five services:
+The ``docker-compose.yml`` defines three services:
 
 - **postgres** — PostgreSQL 15.3 database.
-- **redis** — Redis 7 for caching and Celery broker.
+- **mailpit** — catches outgoing mail on port 8025.
 - **web** — Django dev server on port 8000.
-- **worker** — Celery worker with beat scheduler (``django-celery-beat``).
-- **static** — SCSS compilation and static asset pipeline.
+
+Scheduled and background commands run through Cloud Scheduler and Cloud Tasks;
+see :doc:`scheduled-commands`. Locally, run them with ``make manage <command>``.
 
 Testing & CI
 ------------
@@ -87,6 +88,7 @@ migrations. See :doc:`contributing` for PR expectations.
    contributing
    administration
    commands
+   scheduled-commands
 
 :Source code: https://github.com/python/pythondotorg
 :Issue tracker: https://github.com/python/pythondotorg/issues

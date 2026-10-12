@@ -3,7 +3,7 @@
 from pathlib import Path
 
 from csp.constants import NONCE, SELF, UNSAFE_INLINE
-from decouple import config
+from decouple import Csv, config
 from dj_database_url import parse as dj_database_url_parser
 from django.contrib.messages import constants
 
@@ -37,13 +37,27 @@ DEFAULT_AUTO_FIELD = "django.db.models.AutoField"
 Required during the Django 2.2 -> 4.2 migration.
 """
 
-# celery settings
-_REDIS_URL = config("REDIS_URL", default="redis://redis:6379/0")
+### Background and scheduled commands (Cloud Tasks and Cloud Scheduler)
+# See pydotorg/cloudtasks.py and docs/source/scheduled-commands.rst.
 
-CELERY_BROKER_URL = _REDIS_URL
-CELERY_RESULT_BACKEND = _REDIS_URL
-
-CELERY_BEAT_SCHEDULE = {}
+# The only management commands that Cloud Tasks and Cloud Scheduler may run.
+CLOUD_TASKS_ALLOWED_COMMANDS = (
+    "check_sponsorship_assets_due_date",
+    "clearsessions",
+    "expire_jobs",
+    "import_ics_calendars",
+    "jobs_monthly_report",
+    "update_blogs",
+    "update_index",
+)
+GOOGLE_CLOUD_PROJECT = config("GOOGLE_CLOUD_PROJECT", default="")
+CLOUD_TASKS_LOCATION = config("CLOUD_TASKS_LOCATION", default="")
+CLOUD_TASKS_QUEUE = config("CLOUD_TASKS_QUEUE", default="")
+# The service URL: tokens must be made out for it, and tasks are sent to it.
+CLOUD_TASKS_AUDIENCE = config("CLOUD_TASKS_AUDIENCE", default="")
+# Service accounts allowed to call the handler; the first one is named on new tasks.
+CLOUD_TASKS_INVOKER_EMAILS = config("CLOUD_TASKS_INVOKER_EMAILS", default="", cast=Csv())
+CLOUD_TASKS_DISPATCH_DEADLINE = config("CLOUD_TASKS_DISPATCH_DEADLINE", default=600, cast=int)
 
 ### Locale settings
 
@@ -186,7 +200,6 @@ INSTALLED_APPS = [
     "colorfield",
     "django.contrib.admin",
     "django.contrib.admindocs",
-    "django_celery_beat",
     "django_translation_aliases",
     "pipeline",
     "sitetree",

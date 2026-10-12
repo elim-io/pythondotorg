@@ -10,7 +10,7 @@ from django.views.generic.base import RedirectView, TemplateView
 from apps.cms.views import custom_404
 from apps.downloads.views import ReleaseEditButton
 from apps.users.views import CustomPasswordChangeView, HoneypotSignupView
-from pydotorg import urls_api, views
+from pydotorg import cloudtasks, urls_api, views
 
 handler404 = custom_404
 
@@ -18,6 +18,7 @@ urlpatterns = [
     # homepage
     path("", views.IndexView.as_view(), name="home"),
     re_path(r"^_health/?", views.health, name="health"),
+    path(cloudtasks.RUN_COMMAND_PATH.lstrip("/"), cloudtasks.run_command, name="cloudtasks_run_command"),
     path("authenticated", views.AuthenticatedView.as_view(), name="authenticated"),
     path("release-edit-button/<int:pk>", ReleaseEditButton.as_view(), name="release_edit_button"),
     path("humans.txt", TemplateView.as_view(template_name="humans.txt", content_type="text/plain")),

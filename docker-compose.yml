@@ -12,14 +12,6 @@ services:
       test: ["CMD", "pg_isready", "-U", "pythondotorg", "-d", "pythondotorg"]
       interval: 1s
 
-  redis:
-    image: redis:7-bullseye
-    ports:
-      - "6379:6379"
-    healthcheck:
-     test: ["CMD", "redis-cli","ping"]
-     interval: 1s
-
   mailpit:
     image: axllent/mailpit:v1.27
     ports:
@@ -43,27 +35,6 @@ services:
       EMAIL_PORT: 1025
     depends_on:
       postgres:
-        condition: service_healthy
-      redis:
-        condition: service_healthy
-      mailpit:
-        condition: service_started
-
-  worker:
-    image: pythondotorg:docker-compose
-    command: uv run celery -A pydotorg worker -B -l INFO --scheduler django_celery_beat.schedulers:DatabaseScheduler
-    volumes:
-      - .:/code
-    environment:
-      DATABASE_URL: postgresql://pythondotorg:pythondotorg@postgres:5432/pythondotorg
-      DJANGO_SETTINGS_MODULE: pydotorg.settings.local
-      EMAIL_BACKEND: django.core.mail.backends.smtp.EmailBackend
-      EMAIL_HOST: mailpit
-      EMAIL_PORT: 1025
-    depends_on:
-      postgres:
-        condition: service_healthy
-      redis:
         condition: service_healthy
       mailpit:
         condition: service_started

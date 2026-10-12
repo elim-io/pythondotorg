@@ -3,7 +3,7 @@
 [![CI](https://github.com/python/pythondotorg/actions/workflows/ci.yml/badge.svg)](https://github.com/python/pythondotorg/actions/workflows/ci.yml)
 [![Documentation Status](https://readthedocs.org/projects/pythondotorg/badge/?version=latest)](https://pythondotorg.readthedocs.io/?badge=latest)
 
-The codebase behind [python.org](https://www.python.org). Built with Django, PostgreSQL, Redis, and Celery.
+The codebase behind [python.org](https://www.python.org). Built with Django and PostgreSQL.
 
 > [!NOTE]
 > The repository for CPython itself is at https://github.com/python/cpython, and the
